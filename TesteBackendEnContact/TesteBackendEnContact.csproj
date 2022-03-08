@@ -10,13 +10,13 @@
     <PackageReference Include="FluentMigrator" Version="3.3.1" />
     <PackageReference Include="FluentMigrator.Runner" Version="3.3.1" />
     <PackageReference Include="FluentMigrator.Runner.SQLite" Version="3.3.1" />
+    <PackageReference Include="FluentValidation" Version="10.3.6" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="5.0.11" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="5.6.3" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Core\Domain\ContactBook\Contact\" />
-    <Folder Include="Core\Interface\ContactBook\Contact\" />
+    <Folder Include="Extensions\" />
   </ItemGroup>
 
 </Project>

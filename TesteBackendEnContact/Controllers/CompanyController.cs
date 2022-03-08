@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using TesteBackendEnContact.Controllers.Models;
+using TesteBackendEnContact.Core.CrossCutting.Notifications;
+using TesteBackendEnContact.Core.Domain.ContactBook.Company;
 using TesteBackendEnContact.Core.Interface.ContactBook.Company;
-using TesteBackendEnContact.Repository.Interface;
 
 namespace TesteBackendEnContact.Controllers
 {
@@ -12,35 +12,58 @@ namespace TesteBackendEnContact.Controllers
     [Route("[controller]")]
     public class CompanyController : ControllerBase
     {
-        private readonly ILogger<CompanyController> _logger;
+        private INotifier _notifier;
+        private readonly ICompanyService _companyService;
 
-        public CompanyController(ILogger<CompanyController> logger)
+        public CompanyController(
+            INotifier notifier,
+            ICompanyService companyService)
         {
-            _logger = logger;
+            _notifier = notifier;
+            _companyService = companyService;
         }
 
         [HttpPost]
-        public async Task<ActionResult<ICompany>> Post(SaveCompanyRequest company, [FromServices] ICompanyRepository companyRepository)
+        public async Task<ActionResult<ICompany>> Post(SaveCompanyRequest company)
         {
-            return Ok(await companyRepository.SaveAsync(company.ToCompany()));
+            if (!ModelState.IsValid) return BadRequest("invalid parameters");
+
+            var result = await _companyService.Create(company.ToCompany());
+
+            if(_notifier.HasNotification()) return BadRequest(_notifier.GetNotifications());
+
+            return Ok(result);
         }
 
         [HttpDelete]
-        public async Task Delete(int id, [FromServices] ICompanyRepository companyRepository)
+        public async Task<ActionResult> Delete(int id)
         {
-            await companyRepository.DeleteAsync(id);
+            await _companyService.Delete(id);
+
+            if (_notifier.HasNotification()) return BadRequest(_notifier.GetNotifications());
+
+            return Ok();
         }
 
         [HttpGet]
-        public async Task<IEnumerable<ICompany>> Get([FromServices] ICompanyRepository companyRepository)
+        public async Task<ActionResult<IEnumerable<ICompany>>> Get([FromQuery] CompanyFilter filter)
         {
-            return await companyRepository.GetAllAsync();
+            var result = await _companyService.GetAllWithFilters(filter);
+
+            if (_notifier.HasNotification()) return NotFound(_notifier.GetNotifications());
+
+            return Ok(result);
         }
 
         [HttpGet("{id}")]
-        public async Task<ICompany> Get(int id, [FromServices] ICompanyRepository companyRepository)
+        public async Task<ActionResult<ICompany>> Get(int id)
         {
-            return await companyRepository.GetAsync(id);
+            var result = await _companyService.GetById(id);
+
+            if (_notifier.HasNotification()) return NotFound(_notifier.GetNotifications());
+
+            return Ok(result);
         }
+
     }
 }

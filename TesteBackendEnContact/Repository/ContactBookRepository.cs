@@ -20,53 +20,87 @@ namespace TesteBackendEnContact.Repository
             this.databaseConfig = databaseConfig;
         }
 
-
         public async Task<IContactBook> SaveAsync(IContactBook contactBook)
         {
             using var connection = new SqliteConnection(databaseConfig.ConnectionString);
             var dao = new ContactBookDao(contactBook);
-
-            dao.Id = await connection.InsertAsync(dao);
+            
+            if(contactBook.Id == 0)
+                dao.Id = await connection.InsertAsync(dao);
+            else
+                await connection.UpdateAsync(dao);
 
             return dao.Export();
         }
 
-
         public async Task DeleteAsync(int id)
         {
             using var connection = new SqliteConnection(databaseConfig.ConnectionString);
+            
+            var sql = "DELETE FROM ContactBook WHERE Id = @id";
 
-            // TODO
-            var sql = "";
-
-            await connection.ExecuteAsync(sql);
+            await connection.ExecuteAsync(sql, new { id });
         }
 
-
-
-
-        public async Task<IEnumerable<IContactBook>> GetAllAsync()
+        public async Task<IContactBook> GetAsync(int id)
         {
             using var connection = new SqliteConnection(databaseConfig.ConnectionString);
 
-            var query = "SELECT * FROM ContactBook";
-            var result = await connection.QueryAsync<ContactBookDao>(query);
+            var query = "SELECT * FROM ContactBook Where Id = @id";
+            var result = await connection.QueryAsync<ContactBookDao>(query, new { id });
+            
+            return result?.FirstOrDefault().Export();
+        }
 
-            var returnList = new List<IContactBook>();
+        public async Task<IEnumerable<IContactBook>> GetAllWithFilters(ContactBookFilter filter)
+        {
+            using var connection = new SqliteConnection(databaseConfig.ConnectionString);
 
-            foreach (var AgendaSalva in result.ToList())
+            var query = "";
+            IEnumerable<ContactBookDao> result;
+
+            if (filter != null && (filter.Page != 0 || !string.IsNullOrEmpty(filter.Name) || filter.Id != 0))
             {
-                IContactBook Agenda = new ContactBook(AgendaSalva.Id, AgendaSalva.Name.ToString());
-                returnList.Add(Agenda);
+                var parameters = new
+                {
+                    Id = filter.Id,
+                    Name = filter.Name,
+                    Page = filter.Page,
+                };
+
+                if (!string.IsNullOrEmpty(filter.Name))
+                {
+                    query = @"SELECT * FROM ContactBook 
+                        Where Name = @Name ";
+                }
+                else
+                {
+                    query = @"SELECT * FROM ContactBook ";
+                }
+
+                if (filter.Page > 0)
+                {
+                    query += $"LIMIT {filter.Page * 10}, 10;";
+                }
+                else
+                {
+                    query += $"LIMIT  10;";
+                }
+
+                if (filter.Id != 0)
+                {
+                    query = @"SELECT * FROM ContactBook 
+                        Where Id = @Id";
+                }
+
+                result = await connection.QueryAsync<ContactBookDao>(query, parameters);
+                return result?.Select(item => item.Export());
             }
 
-            return returnList.ToList();
-        }
-        public async Task<IContactBook> GetAsync(int id)
-        {
-            var list = await GetAllAsync();
+            query = "SELECT * FROM ContactBook LIMIT 10";
+            result = await connection.QueryAsync<ContactBookDao>(query);
 
-            return list.ToList().Where(item => item.Id == id).FirstOrDefault();
+            return result?.Select(item => item.Export());
         }
     }
 
@@ -84,7 +118,7 @@ namespace TesteBackendEnContact.Repository
         public ContactBookDao(IContactBook contactBook)
         {
             Id = contactBook.Id;
-            Name = Name;
+            Name = contactBook.Name;
         }
 
         public IContactBook Export() => new ContactBook(Id, Name);

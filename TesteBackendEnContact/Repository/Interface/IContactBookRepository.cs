@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using TesteBackendEnContact.Core.Domain.ContactBook;
 using TesteBackendEnContact.Core.Interface.ContactBook;
 
 namespace TesteBackendEnContact.Repository.Interface
@@ -8,7 +9,7 @@ namespace TesteBackendEnContact.Repository.Interface
     {
         Task<IContactBook> SaveAsync(IContactBook contactBook);
         Task DeleteAsync(int id);
-        Task<IEnumerable<IContactBook>> GetAllAsync();
         Task<IContactBook> GetAsync(int id);
+        Task<IEnumerable<IContactBook>> GetAllWithFilters(ContactBookFilter filter);
     }
 }

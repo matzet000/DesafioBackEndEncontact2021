@@ -46,12 +46,50 @@ namespace TesteBackendEnContact.Repository
             await connection.ExecuteAsync(sql.ToString(), new { id }, transaction);
         }
 
-        public async Task<IEnumerable<ICompany>> GetAllAsync()
+        public async Task<IEnumerable<ICompany>> GetAllWithFiltersAsync(CompanyFilter filter)
         {
             using var connection = new SqliteConnection(databaseConfig.ConnectionString);
 
-            var query = "SELECT * FROM Company";
-            var result = await connection.QueryAsync<CompanyDao>(query);
+            var query = "";
+            IEnumerable<CompanyDao> result;
+
+            if (filter != null && (filter.Id > 0 || filter.Page > 0 || filter.ContactBookId > 0 || !string.IsNullOrEmpty(filter.Name)))
+            {
+                var parameters = new { 
+                    Id = filter.Id, 
+                    Name = filter.Name,
+                    ContactBookId = filter.ContactBookId,
+                    Page = filter.Page,
+                };
+
+                if(!string.IsNullOrEmpty(filter.Name) || filter.ContactBookId > 0)
+                {
+                    query = @"SELECT * FROM Company 
+                        Where Name = @Name
+                        or ContactBookId = @ContactBookId ";
+                }
+                
+                if (filter.Page > 0)
+                {
+                    query += $"LIMIT {filter.Page * 10}, 10;";
+                }
+                else
+                {
+                    query += $"LIMIT  10;";
+                }
+
+                if(filter.Id > 0)
+                {
+                    query = @"SELECT * FROM Company 
+                        Where Id = @Id";
+                }
+
+                result = await connection.QueryAsync<CompanyDao>(query, parameters);
+                return result?.Select(item => item.Export());
+            }
+
+            query = "SELECT * FROM Company LIMIT 10";
+            result = await connection.QueryAsync<CompanyDao>(query);
 
             return result?.Select(item => item.Export());
         }
@@ -60,7 +98,7 @@ namespace TesteBackendEnContact.Repository
         {
             using var connection = new SqliteConnection(databaseConfig.ConnectionString);
 
-            var query = "SELECT * FROM Conpany where Id = @id";
+            var query = "SELECT * FROM Company where Id = @id";
             var result = await connection.QuerySingleOrDefaultAsync<CompanyDao>(query, new { id });
 
             return result?.Export();
@@ -72,6 +110,7 @@ namespace TesteBackendEnContact.Repository
     {
         [Key]
         public int Id { get; set; }
+
         public int ContactBookId { get; set; }
         public string Name { get; set; }
 

@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using TesteBackendEnContact.Controllers.Models;
+using TesteBackendEnContact.Core.CrossCutting.Notifications;
 using TesteBackendEnContact.Core.Domain.ContactBook;
 using TesteBackendEnContact.Core.Interface.ContactBook;
-using TesteBackendEnContact.Repository.Interface;
 
 namespace TesteBackendEnContact.Controllers
 {
@@ -12,35 +12,58 @@ namespace TesteBackendEnContact.Controllers
     [Route("[controller]")]
     public class ContactBookController : ControllerBase
     {
-        private readonly ILogger<ContactBookController> _logger;
+        private INotifier _notifier;
+        private readonly IContactBookService _contactBookService;
 
-        public ContactBookController(ILogger<ContactBookController> logger)
+        public ContactBookController(
+            IContactBookService contactBookService,
+            INotifier notifier)
         {
-            _logger = logger;
+            _contactBookService = contactBookService;
+            _notifier = notifier;
         }
 
         [HttpPost]
-        public async Task<IContactBook> Post(ContactBook contactBook, [FromServices] IContactBookRepository contactBookRepository)
+        public async Task<ActionResult<IContactBook>> Post(SaveContactBookRequest saveContactBook)
         {
-            return await contactBookRepository.SaveAsync(contactBook);
+            if (!ModelState.IsValid) return BadRequest("invalid parameters");
+
+            var result = await _contactBookService.Create(saveContactBook.ToContactBook());
+
+            if (_notifier.HasNotification()) return BadRequest(_notifier.GetNotifications());
+
+            return Ok(result);
         }
 
         [HttpDelete]
-        public async Task Delete(int id, [FromServices] IContactBookRepository contactBookRepository)
+        public async Task<ActionResult> Delete(int id)
         {
-            await contactBookRepository.DeleteAsync(id);
+            await _contactBookService.Delete(id);
+
+            if (_notifier.HasNotification()) return BadRequest(_notifier.GetNotifications());
+
+            return Ok();
         }
 
         [HttpGet]
-        public async Task<IEnumerable<IContactBook>> Get([FromServices] IContactBookRepository contactBookRepository)
+        public async Task<ActionResult<IEnumerable<IContactBook>>> Get([FromQuery] ContactBookFilter filter)
         {
-            return await contactBookRepository.GetAllAsync();
+            var result = await _contactBookService.GetAllWithFilters(filter);
+
+            if (_notifier.HasNotification()) return NotFound(_notifier.GetNotifications());
+
+            return Ok(result);
         }
 
         [HttpGet("{id}")]
-        public async Task<IContactBook> Get(int id, [FromServices] IContactBookRepository contactBookRepository)
+        public async Task<ActionResult<IContactBook>> Get(int id)
         {
-            return await contactBookRepository.GetAsync(id);
+            var result = await _contactBookService.GetById(id);
+
+            if(_notifier.HasNotification()) return NotFound(_notifier.GetNotifications());
+
+            return Ok(result);
         }
+
     }
 }
