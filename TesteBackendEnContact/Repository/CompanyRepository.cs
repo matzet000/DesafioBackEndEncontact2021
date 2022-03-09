@@ -55,11 +55,11 @@ namespace TesteBackendEnContact.Repository
 
             if (filter != null && (filter.Id > 0 || filter.Page > 0 || filter.ContactBookId > 0 || !string.IsNullOrEmpty(filter.Name)))
             {
-                var parameters = new { 
-                    Id = filter.Id, 
+                var parameters = new {
+                    Id = filter.Id,
                     Name = filter.Name,
                     ContactBookId = filter.ContactBookId,
-                    Page = filter.Page,
+                    Page = filter.Page
                 };
 
                 if(!string.IsNullOrEmpty(filter.Name) || filter.ContactBookId > 0)
@@ -68,10 +68,14 @@ namespace TesteBackendEnContact.Repository
                         Where Name = @Name
                         or ContactBookId = @ContactBookId ";
                 }
-                
+                else
+                {
+                    query = @"SELECT * FROM Company ";
+                }
+
                 if (filter.Page > 0)
                 {
-                    query += $"LIMIT {filter.Page * 10}, 10;";
+                    query += $"LIMIT 10 offset {filter.Page * 10};";
                 }
                 else
                 {

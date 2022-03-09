@@ -47,6 +47,7 @@ namespace TesteBackendEnContact.Repository
                     Id = filter.Id,
                     Name = filter.Name,
                     Page = filter.Page,
+                    Word = filter.Word
                 };
 
                 if (!string.IsNullOrEmpty(filter.Name))
@@ -59,9 +60,17 @@ namespace TesteBackendEnContact.Repository
                     query = @"SELECT * FROM Contact ";
                 }
 
+                if (!string.IsNullOrEmpty(filter.Word))
+                {
+                    query = @"SELECT * FROM Company 
+                        Where Name = @Word
+                        or ContactBookId = @Word ";
+                }
+
+
                 if (filter.Page > 0)
                 {
-                    query += $"LIMIT {filter.Page * 10}, 10;";
+                    query += $"LIMIT 10 offset  {filter.Page * 10};";
                 }
                 else
                 {

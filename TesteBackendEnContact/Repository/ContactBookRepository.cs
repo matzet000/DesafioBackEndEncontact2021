@@ -90,7 +90,7 @@ namespace TesteBackendEnContact.Repository
 
                 if (filter.Page > 0)
                 {
-                    query += $"LIMIT {filter.Page * 10}, 10;";
+                    query += $"LIMIT 10 offset  {filter.Page * 10};";
                 }
                 else
                 {
