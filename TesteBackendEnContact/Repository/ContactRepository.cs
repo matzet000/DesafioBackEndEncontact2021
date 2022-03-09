@@ -40,7 +40,7 @@ namespace TesteBackendEnContact.Repository
             var query = "";
             IEnumerable<ContactDao> result;
 
-            if (filter != null && (filter.Page != 0 || !string.IsNullOrEmpty(filter.Name) || filter.Id != 0))
+            if (filter != null && (filter.Page != 0 || !string.IsNullOrEmpty(filter.Name) || filter.Id != 0) || !string.IsNullOrEmpty(filter.Word))
             {
                 var parameters = new
                 {
@@ -52,7 +52,7 @@ namespace TesteBackendEnContact.Repository
 
                 if (!string.IsNullOrEmpty(filter.Name))
                 {
-                    query = @"SELECT * FROM Contact
+                    query = @$"SELECT * FROM Contact
                         Where Name = @Name ";
                 }
                 else
@@ -62,9 +62,8 @@ namespace TesteBackendEnContact.Repository
 
                 if (!string.IsNullOrEmpty(filter.Word))
                 {
-                    query = @"SELECT * FROM Company 
-                        Where Name = @Word
-                        or ContactBookId = @Word ";
+                    query = @$"SELECT * FROM Contact
+                        Where Name Like '%{filter.Word}%' or Phone Like '%{filter.Word}%' or Email Like '%{filter.Word}%' or Address Like '%{filter.Word}%' ";
                 }
 
 
