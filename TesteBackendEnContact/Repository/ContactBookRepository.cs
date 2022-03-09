@@ -52,6 +52,16 @@ namespace TesteBackendEnContact.Repository
             return result?.FirstOrDefault().Export();
         }
 
+        public async Task<IEnumerable<IContactBook>> GetContactBookByCompanyAsync(int id)
+        {
+            using var connection = new SqliteConnection(databaseConfig.ConnectionString);
+
+            var query = "SELECT * FROM ContactBook, Company Where Company.ContactBookId = @id";
+            var result = await connection.QueryAsync<ContactBookDao>(query, new { id });
+
+            return result?.Select(item => item.Export());
+        }
+
         public async Task<IEnumerable<IContactBook>> GetAllWithFilters(ContactBookFilter filter)
         {
             using var connection = new SqliteConnection(databaseConfig.ConnectionString);

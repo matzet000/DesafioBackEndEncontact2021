@@ -65,5 +65,14 @@ namespace TesteBackendEnContact.Controllers
             return Ok(result);
         }
 
+        [HttpGet("company/{id}")]
+        public async Task<ActionResult<IContactBook>> GetContactBookByCompany(int id)
+        {
+            var result = await _contactBookService.GetContactBookByCompany(id);
+
+            if (_notifier.HasNotification()) return NotFound(_notifier.GetNotifications());
+
+            return Ok(result);
+        }
     }
 }

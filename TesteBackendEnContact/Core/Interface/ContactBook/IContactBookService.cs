@@ -9,6 +9,7 @@ namespace TesteBackendEnContact.Core.Interface.ContactBook
         Task<IContactBook> Create(IContactBook entity);
         Task<IContactBook> GetById(int IdEntity);
         Task<IEnumerable<IContactBook>> GetAllWithFilters(ContactBookFilter filter);
+        Task<IContactBook> GetContactBookByCompany(int IdEntity);
         Task Delete(int IdEntity);
     }
 }

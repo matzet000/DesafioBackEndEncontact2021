@@ -36,6 +36,15 @@ namespace TesteBackendEnContact.Core.Services.ContactBook
             return entity;
         }
 
+        public async Task<IContactBook> GetContactBookByCompany(int IdEntity)
+        {
+            var entity = await _contactBookRepository.GetAsync(IdEntity);
+
+            if (entity == null) _notifier.Handle("Not found");
+
+            return entity;
+        }
+
         public async Task<IEnumerable<IContactBook>> GetAllWithFilters(ContactBookFilter filter)
         {
             var entity = await _contactBookRepository.GetAllWithFilters(filter);

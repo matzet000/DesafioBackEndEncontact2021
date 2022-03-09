@@ -11,5 +11,6 @@ namespace TesteBackendEnContact.Repository.Interface
         Task DeleteAsync(int id);
         Task<IContactBook> GetAsync(int id);
         Task<IEnumerable<IContactBook>> GetAllWithFilters(ContactBookFilter filter);
+        Task<IEnumerable<IContactBook>> GetContactBookByCompanyAsync(int id);
     }
 }
